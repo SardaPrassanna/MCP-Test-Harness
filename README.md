@@ -2,7 +2,7 @@
 
 A production-grade test harness and web console for **Model Context Protocol (MCP) servers**, built in Python. It lets developers register MCP servers, discover their tools/resources/prompts, define and run test scenarios against them, and review results — including failures and execution logs — through a simple web UI.
 
-> **Status:** Phase 1 (Foundation) complete — project scaffolding, FastAPI app, config, and a health endpoint exist. MCP connectivity, test execution, and the web UI are not implemented yet. See [Development Process](#development-process).
+> **Status:** Phase 2 (MCP Connection Layer) complete — project scaffolding, FastAPI app, config, a health endpoint, and the MCP connection abstraction (stdio + Streamable HTTP transports, lifecycle, timeouts) exist. Test execution and the web UI are not implemented yet. See [Development Process](#development-process).
 
 ## What It Does
 
@@ -120,12 +120,13 @@ mcp-test-harness/
 │   └── mcp_test_harness/
 │       ├── api/          # FastAPI routers (health endpoint so far)
 │       ├── config/       # pydantic-settings application configuration
-│       ├── mcp/          # MCP connection layer (stdio, Streamable HTTP) — empty, Phase 2+
-│       ├── runner/       # test scenario execution — empty, Phase 2+
-│       ├── assertions/   # response validation helpers — empty, Phase 2+
-│       ├── storage/      # SQLAlchemy engine/session, repositories — empty, Phase 2+
-│       ├── models/       # shared Pydantic/SQLAlchemy models — empty, Phase 2+
-│       ├── services/     # orchestration across the layers above — empty, Phase 2+
+│       ├── mcp/          # MCP connection layer: transports, lifecycle, timeouts
+│       │   └── adapters/ # StdioTransport, StreamableHttpTransport
+│       ├── runner/       # test scenario execution — empty, Phase 3+
+│       ├── assertions/   # response validation helpers — empty, Phase 3+
+│       ├── storage/      # SQLAlchemy engine/session, repositories — empty, Phase 3+
+│       ├── models/       # shared Pydantic/SQLAlchemy models (server configs so far)
+│       ├── services/     # orchestration across the layers above — empty, Phase 3+
 │       └── main.py       # FastAPI app factory/instance
 ├── tests/
 ├── .env.example
