@@ -2,7 +2,7 @@
 
 A production-grade test harness and web console for **Model Context Protocol (MCP) servers**, built in Python. It lets developers register MCP servers, discover their tools/resources/prompts, define and run test scenarios against them, and review results — including failures and execution logs — through a simple web UI.
 
-> **Status:** Phase 3 (Connection & Discovery Tests) complete — project scaffolding, FastAPI app, config, a health endpoint, the MCP connection abstraction (stdio + Streamable HTTP transports, lifecycle, timeouts), and connection/discovery tests against local fake MCP servers exist. Test execution (scenario definitions and running them) and the web UI are not implemented yet. See [Development Process](#development-process).
+> **Status:** Phase 4 (Test Scenarios) complete — project scaffolding, FastAPI app, config, a health endpoint, the MCP connection abstraction (stdio + Streamable HTTP transports, lifecycle, timeouts), connection/discovery tests against local fake MCP servers, and a declarative test scenario format (YAML/JSON) exist. Running scenarios against a connected server and the web UI are not implemented yet. See [Development Process](#development-process).
 
 ## What It Does
 
@@ -48,6 +48,23 @@ The codebase is organized so the MCP implementation stays decoupled from the web
 - **Persistence** — SQLAlchemy models and repositories for servers, scenarios, and runs
 - **API** — FastAPI routes
 - **UI** — Jinja2/HTMX views consuming the API
+
+## Test Scenario Format
+
+Test scenarios describe a single tool call and what to expect back, as YAML or JSON — either one scenario mapping per file, or a list of them:
+
+```yaml
+name: list_users
+server: demo
+tool: list_users
+input:
+  limit: 5
+assertions:
+  status: success
+  min_items: 1
+```
+
+`assertions` accepts `status` (`success`/`error`), `min_items`/`max_items`, `equals`, and `contains`; at least one must be given. Unknown fields anywhere in a scenario are rejected so a typo fails validation instead of being silently ignored. Load and validate scenarios with `mcp_test_harness.models.load_scenarios_from_file("scenarios.yaml")` (or `load_scenarios_from_text(...)` for in-memory YAML/JSON); a malformed scenario raises `ScenarioLoadError` naming the file and which scenario is at fault. Running a scenario against a connected server is not implemented yet.
 
 ## Security Considerations
 
@@ -122,11 +139,11 @@ mcp-test-harness/
 │       ├── config/       # pydantic-settings application configuration
 │       ├── mcp/          # MCP connection layer: transports, lifecycle, timeouts
 │       │   └── adapters/ # StdioTransport, StreamableHttpTransport
-│       ├── runner/       # test scenario execution — empty, Phase 3+
-│       ├── assertions/   # response validation helpers — empty, Phase 3+
-│       ├── storage/      # SQLAlchemy engine/session, repositories — empty, Phase 3+
-│       ├── models/       # shared Pydantic/SQLAlchemy models (server configs so far)
-│       ├── services/     # orchestration across the layers above — empty, Phase 3+
+│       ├── runner/       # test scenario execution — empty, Phase 5+
+│       ├── assertions/   # response validation helpers — empty, Phase 5+
+│       ├── storage/      # SQLAlchemy engine/session, repositories — empty, Phase 5+
+│       ├── models/       # server configs + declarative test scenarios (YAML/JSON)
+│       ├── services/     # orchestration across the layers above — empty, Phase 5+
 │       └── main.py       # FastAPI app factory/instance
 ├── tests/
 ├── .env.example
