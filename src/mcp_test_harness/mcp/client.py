@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import asyncio
 from contextlib import AsyncExitStack
 from types import TracebackType
 
+import anyio
 from mcp import ClientSession
 
 from mcp_test_harness.mcp.exceptions import (
@@ -51,16 +51,20 @@ class MCPConnection:
 
         exit_stack = AsyncExitStack()
 
+        # A transport's `connect()` context manager is held open by
+        # `exit_stack` for the whole life of the connection, so its *entry*
+        # can't be bounded with `anyio.fail_after`/`asyncio.wait_for`: the MCP
+        # SDK opens anyio task groups while entering, and anyio requires a
+        # cancel scope's enter and exit to nest strictly within the same
+        # task — a timeout scope that closes here while the task group stays
+        # open past it (or a `wait_for`-spawned task that enters it) breaks
+        # that invariant. Opening a transport is local/non-blocking (spawning
+        # a subprocess, constructing an HTTP client), so real hangs surface
+        # in `initialize()` below, which we do bound.
         try:
-            read_stream, write_stream = await asyncio.wait_for(
-                exit_stack.enter_async_context(self._transport.connect()),
-                timeout=self._config.connect_timeout_seconds,
+            read_stream, write_stream = await exit_stack.enter_async_context(
+                self._transport.connect()
             )
-        except TimeoutError as exc:
-            await exit_stack.aclose()
-            raise MCPConnectionTimeoutError(
-                f"timed out opening transport to MCP server {self._config.name!r}"
-            ) from exc
         except Exception as exc:
             await exit_stack.aclose()
             raise MCPConnectionError(
@@ -75,10 +79,8 @@ class MCPConnection:
                     read_timeout_seconds=self._config.request_timeout_seconds,
                 )
             )
-            await asyncio.wait_for(
-                session.initialize(),
-                timeout=self._config.connect_timeout_seconds,
-            )
+            with anyio.fail_after(self._config.connect_timeout_seconds):
+                await session.initialize()
         except TimeoutError as exc:
             await exit_stack.aclose()
             raise MCPConnectionTimeoutError(

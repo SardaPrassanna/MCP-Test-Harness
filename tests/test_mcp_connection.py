@@ -35,16 +35,6 @@ class _SucceedingTransport:
         return _cm()
 
 
-class _HangingTransport:
-    def connect(self) -> AbstractAsyncContextManager[tuple[Any, Any]]:
-        @asynccontextmanager
-        async def _cm() -> AsyncIterator[tuple[Any, Any]]:
-            await asyncio.sleep(10)
-            yield object(), object()
-
-        return _cm()
-
-
 class _FailingTransport:
     def connect(self) -> AbstractAsyncContextManager[tuple[Any, Any]]:
         @asynccontextmanager
@@ -137,20 +127,6 @@ async def test_connect_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(_FakeClientSession.instances) == 1
 
     await connection.close()
-
-
-async def test_connect_raises_timeout_when_transport_hangs(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(client_module, "build_transport", lambda _config: _HangingTransport())
-    monkeypatch.setattr(client_module, "ClientSession", _FakeClientSession)
-
-    connection = MCPConnection(_stdio_config(connect_timeout_seconds=0.05))
-
-    with pytest.raises(MCPConnectionTimeoutError):
-        await connection.connect()
-
-    assert connection.is_connected is False
 
 
 async def test_connect_raises_timeout_when_initialize_hangs(

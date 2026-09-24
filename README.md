@@ -2,7 +2,7 @@
 
 A production-grade test harness and web console for **Model Context Protocol (MCP) servers**, built in Python. It lets developers register MCP servers, discover their tools/resources/prompts, define and run test scenarios against them, and review results — including failures and execution logs — through a simple web UI.
 
-> **Status:** Phase 2 (MCP Connection Layer) complete — project scaffolding, FastAPI app, config, a health endpoint, and the MCP connection abstraction (stdio + Streamable HTTP transports, lifecycle, timeouts) exist. Test execution and the web UI are not implemented yet. See [Development Process](#development-process).
+> **Status:** Phase 3 (Connection & Discovery Tests) complete — project scaffolding, FastAPI app, config, a health endpoint, the MCP connection abstraction (stdio + Streamable HTTP transports, lifecycle, timeouts), and connection/discovery tests against local fake MCP servers exist. Test execution (scenario definitions and running them) and the web UI are not implemented yet. See [Development Process](#development-process).
 
 ## What It Does
 
