@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Tests - MCP Test Harness{% endblock %}
+{% block content %}
+<h1>Tests</h1>
+<p class="subtitle">Declarative scenarios. Run one test or the whole suite.</p>
+
+<div class="card section">
+  <div class="actions-row" style="justify-content: space-between; margin-bottom: 1rem;">
+    <h2 style="margin: 0;">Scenarios</h2>
+    {% if scenarios %}
+    <div>
+      <button class="btn btn-primary"
+              hx-post="/tests/run-all"
+              hx-target="#suite-result"
+              hx-swap="innerHTML">
+        Run test suite
+      </button>
+      <div id="suite-result" class="result-fragment"></div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if scenarios %}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Server</th>
+        <th>Tool</th>
+        <th>Run</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for scenario in scenarios %}
+      <tr>
+        <td>{{ scenario.name }}</td>
+        <td>{{ scenario.server }}</td>
+        <td class="mono">{{ scenario.tool }}</td>
+        <td>
+          <div class="actions-row">
+            <button class="btn btn-small"
+                    hx-post="/tests/{{ scenario.id }}/run"
+                    hx-target="#result-{{ scenario.id }}"
+                    hx-swap="innerHTML">
+              Run
+            </button>
+            <span id="result-{{ scenario.id }}" class="result-fragment"></span>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No scenarios registered yet.</p>
+  {% endif %}
+</div>
+
+<div class="card section">
+  <h2>Register a scenario</h2>
+  <form method="post" action="/tests">
+    <div class="form-grid">
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" name="name" required />
+      </div>
+      <div class="field">
+        <label for="server">Server</label>
+        <select id="server" name="server">
+          {% for server in servers %}
+          <option value="{{ server.name }}">{{ server.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="tool">Tool</label>
+        <input id="tool" name="tool" required />
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label for="input">Input (JSON)</label>
+        <textarea id="input" name="input">{}</textarea>
+      </div>
+      <div class="field">
+        <label for="assertions">Assertions (JSON)</label>
+        <textarea id="assertions" name="assertions">{"status": "success"}</textarea>
+      </div>
+    </div>
+    <button class="btn btn-primary" type="submit">Register scenario</button>
+  </form>
+</div>
+{% endblock %}

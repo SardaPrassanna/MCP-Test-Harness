@@ -1,0 +1,7 @@
+{% if error %}
+<span class="error-text">{{ error }}</span>
+{% else %}
+<span class="badge badge-{{ run.status }}">{{ run.status }}</span>
+<a href="/runs/{{ run.id }}">Run #{{ run.id }}</a>
+({{ run.passed }} passed, {{ run.failed }} failed, {{ run.errored }} errored)
+{% endif %}

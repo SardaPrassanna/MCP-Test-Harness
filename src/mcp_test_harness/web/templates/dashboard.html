@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - MCP Test Harness{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p class="subtitle">Overview of registered servers, declared tests, and recent runs.</p>
+
+<div class="grid">
+  <div class="stat">
+    <div class="value">{{ servers|length }}</div>
+    <div class="label">Registered servers</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ total_tests }}</div>
+    <div class="label">Total tests</div>
+  </div>
+  <div class="stat">
+    <div class="value">{% if latest_run %}#{{ latest_run.id }}{% else %}&mdash;{% endif %}</div>
+    <div class="label">Latest run</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ latest_run.passed if latest_run else 0 }}</div>
+    <div class="label">Passed tests</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ latest_run.failed if latest_run else 0 }}</div>
+    <div class="label">Failed tests</div>
+  </div>
+</div>
+
+<div class="section card">
+  <h2>Registered servers</h2>
+  {% if servers %}
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Transport</th><th>Registered</th></tr>
+    </thead>
+    <tbody>
+      {% for server in servers %}
+      <tr>
+        <td>{{ server.name }}</td>
+        <td>{{ server.transport }}</td>
+        <td>{{ server.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No servers registered yet. <a href="/servers">Register one</a>.</p>
+  {% endif %}
+</div>
+
+<div class="section card">
+  <h2>Recent runs</h2>
+  {% if recent_runs %}
+  <table>
+    <thead>
+      <tr><th>Run</th><th>Status</th><th>Passed</th><th>Failed</th><th>Errored</th><th>When</th></tr>
+    </thead>
+    <tbody>
+      {% for run in recent_runs %}
+      <tr>
+        <td><a href="/runs/{{ run.id }}">#{{ run.id }}</a></td>
+        <td><span class="badge badge-{{ run.status }}">{{ run.status }}</span></td>
+        <td>{{ run.passed }}</td>
+        <td>{{ run.failed }}</td>
+        <td>{{ run.errored }}</td>
+        <td>{{ run.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No runs yet. <a href="/tests">Run a test</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

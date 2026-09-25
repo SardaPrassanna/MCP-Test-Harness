@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Runs - MCP Test Harness{% endblock %}
+{% block content %}
+<h1>Runs</h1>
+<p class="subtitle">Historical test runs, most recent first.</p>
+
+<div class="card section">
+  {% if runs %}
+  <table>
+    <thead>
+      <tr>
+        <th>Run</th>
+        <th>Status</th>
+        <th>Passed</th>
+        <th>Failed</th>
+        <th>Errored</th>
+        <th>Duration</th>
+        <th>When</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for run in runs %}
+      <tr>
+        <td><a href="/runs/{{ run.id }}">#{{ run.id }}</a></td>
+        <td><span class="badge badge-{{ run.status }}">{{ run.status }}</span></td>
+        <td>{{ run.passed }}</td>
+        <td>{{ run.failed }}</td>
+        <td>{{ run.errored }}</td>
+        <td>{{ "%.2f"|format(run.results|sum(attribute="duration_seconds")) }}s</td>
+        <td>{{ run.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No runs yet. <a href="/tests">Run a test</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

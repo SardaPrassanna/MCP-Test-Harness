@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}MCP Test Harness{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/dashboard">MCP Test Harness</a>
+      <nav class="nav">
+        <a href="/dashboard" {% if active == "dashboard" %}class="active"{% endif %}>Dashboard</a>
+        <a href="/servers" {% if active == "servers" %}class="active"{% endif %}>Servers</a>
+        <a href="/tests" {% if active == "tests" %}class="active"{% endif %}>Tests</a>
+        <a href="/runs" {% if active == "runs" %}class="active"{% endif %}>Runs</a>
+      </nav>
+    </div>
+  </header>
+  <main class="page">
+    {% if request.query_params.get("error") %}
+      <div class="banner banner-error">{{ request.query_params.get("error") }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

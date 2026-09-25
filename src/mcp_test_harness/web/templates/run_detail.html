@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Run #{{ run.id }} - MCP Test Harness{% endblock %}
+{% block content %}
+<h1>Run #{{ run.id }}</h1>
+<p class="subtitle">{{ run.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+
+<div class="grid">
+  <div class="stat">
+    <div class="value"><span class="badge badge-{{ run.status }}">{{ run.status }}</span></div>
+    <div class="label">Status</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ run.passed }}</div>
+    <div class="label">Passed</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ run.failed }}</div>
+    <div class="label">Failed</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ run.errored }}</div>
+    <div class="label">Errored</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ "%.2f"|format(run.results|sum(attribute="duration_seconds")) }}s</div>
+    <div class="label">Total duration</div>
+  </div>
+</div>
+
+{% for result in run.results %}
+<div class="card section">
+  <div class="actions-row" style="justify-content: space-between;">
+    <h2 style="margin: 0;">{{ result.scenario }}</h2>
+    <span class="badge badge-{{ result.status }}">{{ result.status }}</span>
+  </div>
+  <p class="subtitle">
+    server: <span class="mono">{{ result.server }}</span> &middot;
+    tool: <span class="mono">{{ result.tool }}</span> &middot;
+    duration: {{ "%.3f"|format(result.duration_seconds) }}s
+  </p>
+
+  {% if result.error %}
+  <p class="error-text">{{ result.error }}</p>
+  {% endif %}
+
+  {% if result.assertions %}
+  <ul class="assertion-list">
+    {% for assertion in result.assertions %}
+    <li>
+      <span class="badge {% if assertion.passed %}badge-passed{% else %}badge-failed{% endif %}">
+        {{ "pass" if assertion.passed else "fail" }}
+      </span>
+      <strong class="mono">{{ assertion.assertion }}</strong>
+      &mdash; {{ assertion.message }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

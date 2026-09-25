@@ -62,28 +62,28 @@ def test_health(client: TestClient) -> None:
 
 
 def test_register_and_list_servers(client: TestClient) -> None:
-    create = client.post("/servers", json=_server_payload())
+    create = client.post("/api/servers", json=_server_payload())
     assert create.status_code == 201
     body = create.json()
     assert body["name"] == "fake-stdio-server"
     assert body["transport"] == "stdio"
     assert "id" in body
 
-    listing = client.get("/servers")
+    listing = client.get("/api/servers")
     assert listing.status_code == 200
     assert [server["name"] for server in listing.json()] == ["fake-stdio-server"]
 
 
 def test_registering_duplicate_server_name_is_rejected(client: TestClient) -> None:
-    client.post("/servers", json=_server_payload())
+    client.post("/api/servers", json=_server_payload())
 
-    response = client.post("/servers", json=_server_payload())
+    response = client.post("/api/servers", json=_server_payload())
 
     assert response.status_code == 409
 
 
 def test_registering_malformed_server_is_rejected(client: TestClient) -> None:
-    response = client.post("/servers", json={"transport": "stdio", "name": "broken"})
+    response = client.post("/api/servers", json={"transport": "stdio", "name": "broken"})
 
     assert response.status_code == 422
 
@@ -92,19 +92,19 @@ def test_registering_malformed_server_is_rejected(client: TestClient) -> None:
 
 
 def test_register_and_list_scenarios(client: TestClient) -> None:
-    create = client.post("/tests", json=_scenario_payload())
+    create = client.post("/api/tests", json=_scenario_payload())
     assert create.status_code == 201
     body = create.json()
     assert body["name"] == "echo_scenario"
     assert "id" in body
 
-    listing = client.get("/tests")
+    listing = client.get("/api/tests")
     assert listing.status_code == 200
     assert [scenario["name"] for scenario in listing.json()] == ["echo_scenario"]
 
 
 def test_registering_malformed_scenario_is_rejected(client: TestClient) -> None:
-    response = client.post("/tests", json={"name": "broken"})
+    response = client.post("/api/tests", json={"name": "broken"})
 
     assert response.status_code == 422
 
@@ -131,7 +131,7 @@ def test_registering_malformed_scenario_is_rejected(client: TestClient) -> None:
 def test_invalid_scenario_shapes_are_rejected_with_422(
     client: TestClient, overrides: dict[str, Any]
 ) -> None:
-    response = client.post("/tests", json=_scenario_payload(**overrides))
+    response = client.post("/api/tests", json=_scenario_payload(**overrides))
 
     assert response.status_code == 422
 
@@ -140,10 +140,10 @@ def test_invalid_scenario_shapes_are_rejected_with_422(
 
 
 def test_run_passing_scenario(client: TestClient) -> None:
-    client.post("/servers", json=_server_payload())
-    scenario_id = client.post("/tests", json=_scenario_payload()).json()["id"]
+    client.post("/api/servers", json=_server_payload())
+    scenario_id = client.post("/api/tests", json=_scenario_payload()).json()["id"]
 
-    response = client.post("/runs", json={"scenario_ids": [scenario_id]})
+    response = client.post("/api/runs", json={"scenario_ids": [scenario_id]})
 
     assert response.status_code == 201
     body = response.json()
@@ -157,12 +157,12 @@ def test_run_passing_scenario(client: TestClient) -> None:
 
 
 def test_run_failing_scenario(client: TestClient) -> None:
-    client.post("/servers", json=_server_payload())
+    client.post("/api/servers", json=_server_payload())
     scenario_id = client.post(
-        "/tests", json=_scenario_payload(assertions={"equals": "goodbye"})
+        "/api/tests", json=_scenario_payload(assertions={"equals": "goodbye"})
     ).json()["id"]
 
-    response = client.post("/runs", json={"scenario_ids": [scenario_id]})
+    response = client.post("/api/runs", json={"scenario_ids": [scenario_id]})
 
     assert response.status_code == 201
     body = response.json()
@@ -172,44 +172,44 @@ def test_run_failing_scenario(client: TestClient) -> None:
 
 
 def test_run_with_unknown_scenario_id_is_rejected(client: TestClient) -> None:
-    response = client.post("/runs", json={"scenario_ids": [999]})
+    response = client.post("/api/runs", json={"scenario_ids": [999]})
 
     assert response.status_code == 400
 
 
 def test_run_with_unregistered_server_is_rejected(client: TestClient) -> None:
     scenario_id = client.post(
-        "/tests", json=_scenario_payload(server="never-registered")
+        "/api/tests", json=_scenario_payload(server="never-registered")
     ).json()["id"]
 
-    response = client.post("/runs", json={"scenario_ids": [scenario_id]})
+    response = client.post("/api/runs", json={"scenario_ids": [scenario_id]})
 
     assert response.status_code == 400
 
 
 def test_run_requires_at_least_one_scenario_id(client: TestClient) -> None:
-    response = client.post("/runs", json={"scenario_ids": []})
+    response = client.post("/api/runs", json={"scenario_ids": []})
 
     assert response.status_code == 422
 
 
 def test_get_run_and_list_runs(client: TestClient) -> None:
-    client.post("/servers", json=_server_payload())
-    scenario_id = client.post("/tests", json=_scenario_payload()).json()["id"]
-    run_id = client.post("/runs", json={"scenario_ids": [scenario_id]}).json()["id"]
+    client.post("/api/servers", json=_server_payload())
+    scenario_id = client.post("/api/tests", json=_scenario_payload()).json()["id"]
+    run_id = client.post("/api/runs", json={"scenario_ids": [scenario_id]}).json()["id"]
 
-    detail = client.get(f"/runs/{run_id}")
+    detail = client.get(f"/api/runs/{run_id}")
     assert detail.status_code == 200
     assert detail.json()["id"] == run_id
     assert len(detail.json()["results"]) == 1
 
-    listing = client.get("/runs")
+    listing = client.get("/api/runs")
     assert listing.status_code == 200
     assert [run["id"] for run in listing.json()] == [run_id]
 
 
 def test_get_unknown_run_returns_404(client: TestClient) -> None:
-    response = client.get("/runs/999")
+    response = client.get("/api/runs/999")
 
     assert response.status_code == 404
 
@@ -222,9 +222,9 @@ def test_fresh_client_sees_no_data_from_other_tests(client: TestClient) -> None:
     like the ones in `_server_payload`/`_scenario_payload`; if the `client`
     fixture's per-test scratch database ever leaked into another test, one
     of those registrations would show up here as pre-existing data."""
-    assert client.get("/servers").json() == []
-    assert client.get("/tests").json() == []
-    assert client.get("/runs").json() == []
+    assert client.get("/api/servers").json() == []
+    assert client.get("/api/tests").json() == []
+    assert client.get("/api/runs").json() == []
 
 
 def test_two_test_databases_can_reuse_the_same_server_name(tmp_path: Path) -> None:
@@ -235,14 +235,14 @@ def test_two_test_databases_can_reuse_the_same_server_name(tmp_path: Path) -> No
         create_app(Settings(database_url=f"sqlite:///{(tmp_path / 'second.db').as_posix()}"))
     )
 
-    first_response = first_client.post("/servers", json=_server_payload())
-    second_response = second_client.post("/servers", json=_server_payload())
+    first_response = first_client.post("/api/servers", json=_server_payload())
+    second_response = second_client.post("/api/servers", json=_server_payload())
 
     assert first_response.status_code == 201
     assert second_response.status_code == 201
-    assert [server["name"] for server in first_client.get("/servers").json()] == [
+    assert [server["name"] for server in first_client.get("/api/servers").json()] == [
         "fake-stdio-server"
     ]
-    assert [server["name"] for server in second_client.get("/servers").json()] == [
+    assert [server["name"] for server in second_client.get("/api/servers").json()] == [
         "fake-stdio-server"
     ]

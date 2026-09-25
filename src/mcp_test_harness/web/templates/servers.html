@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Servers - MCP Test Harness{% endblock %}
+{% block content %}
+<h1>Servers</h1>
+<p class="subtitle">Registered MCP servers. Check status or discover tools without leaving the page.</p>
+
+<div class="card section">
+  {% if servers %}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Transport</th>
+        <th>Status</th>
+        <th>Tools</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for server in servers %}
+      <tr>
+        <td>{{ server.name }}</td>
+        <td>{{ server.transport }}</td>
+        <td>
+          <span id="status-{{ server.id }}">
+            <button class="btn btn-small"
+                    hx-get="/servers/{{ server.id }}/status"
+                    hx-target="#status-{{ server.id }}"
+                    hx-swap="innerHTML">
+              Check status
+            </button>
+          </span>
+        </td>
+        <td>
+          <div id="tools-{{ server.id }}">
+            <button class="btn btn-small"
+                    hx-get="/servers/{{ server.id }}/tools"
+                    hx-target="#tools-{{ server.id }}"
+                    hx-swap="innerHTML">
+              Discover tools
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No servers registered yet.</p>
+  {% endif %}
+</div>
+
+<div class="card section">
+  <h2>Register a server</h2>
+  <form method="post" action="/servers">
+    <div class="form-grid">
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" name="name" required />
+      </div>
+      <div class="field">
+        <label for="transport">Transport</label>
+        <select id="transport" name="transport">
+          <option value="stdio">stdio</option>
+          <option value="streamable_http">streamable_http</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="command">Command (stdio)</label>
+        <input id="command" name="command" placeholder="python" />
+      </div>
+      <div class="field">
+        <label for="args">Args (stdio, space-separated)</label>
+        <input id="args" name="args" placeholder="server.py --flag" />
+      </div>
+      <div class="field">
+        <label for="url">URL (streamable_http)</label>
+        <input id="url" name="url" placeholder="https://example.com/mcp" />
+      </div>
+    </div>
+    <button class="btn btn-primary" type="submit">Register server</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% if error %}
+<span class="error-text">{{ error }}</span>
+{% elif tools %}
+<ul class="assertion-list">
+  {% for tool in tools %}
+  <li class="mono">{{ tool }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<span class="empty">No tools advertised.</span>
+{% endif %}
