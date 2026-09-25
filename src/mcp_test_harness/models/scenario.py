@@ -20,10 +20,20 @@ class ScenarioAssertions(BaseModel):
     max_items: int | None = Field(default=None, ge=0)
     equals: Any = None
     contains: Any = None
+    field_equals: dict[str, Any] | None = None
+    field_exists: list[str] | None = None
 
     @model_validator(mode="after")
     def _require_at_least_one_check(self) -> ScenarioAssertions:
-        known_checks = {"status", "min_items", "max_items", "equals", "contains"}
+        known_checks = {
+            "status",
+            "min_items",
+            "max_items",
+            "equals",
+            "contains",
+            "field_equals",
+            "field_exists",
+        }
         if not self.model_fields_set & known_checks:
             raise ValueError("assertions must specify at least one check")
         return self

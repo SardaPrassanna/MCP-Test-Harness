@@ -56,7 +56,7 @@ async def test_tool_failure_is_reported_as_failed_not_error(
 
     assert result.status == "failed"
     assert result.error is None
-    assert any("5" in failure for failure in result.failures)
+    assert any("5" in failure.message for failure in result.failures)
 
 
 # 3. Connection failure -------------------------------------------------------------
@@ -97,7 +97,7 @@ async def test_malformed_input_surfaces_as_mcp_tool_error(
     assert result.status == "failed"
     assert result.response is not None
     assert result.response["is_error"] is True
-    assert any("status" in failure for failure in result.failures)
+    assert any("status" in failure.message for failure in result.failures)
 
 
 # 6. MCP error response ----------------------------------------------------------------

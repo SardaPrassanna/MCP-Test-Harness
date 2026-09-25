@@ -9,7 +9,7 @@ from mcp.types import CallToolResult, TextContent
 from mcp_test_harness.assertions.evaluator import capture_outcome, evaluate_assertions
 from mcp_test_harness.mcp.client import MCPConnection
 from mcp_test_harness.mcp.exceptions import MCPConnectionError
-from mcp_test_harness.models.result import ScenarioResult
+from mcp_test_harness.models.result import TestResult
 from mcp_test_harness.models.scenario import TestScenario
 from mcp_test_harness.models.server import ServerConfig
 
@@ -19,14 +19,14 @@ async def run_scenario(
     server: ServerConfig,
     *,
     timeout_seconds: float | None = None,
-) -> ScenarioResult:
+) -> TestResult:
     """Execute a single declarative scenario against a live MCP server.
 
     Owns the whole pipeline: opens a fresh `MCPConnection` to `server`,
     invokes `scenario.tool` with `scenario.input`, captures the response,
     and checks it against `scenario.assertions`. Never raises: connection
     failures, tool-call timeouts, and unexpected exceptions are all
-    captured as an `"error"` `ScenarioResult` rather than propagating, so a
+    captured as an `"error"` `TestResult` rather than propagating, so a
     single bad scenario can't take down a run of many.
 
     `timeout_seconds` bounds only the tool invocation itself; it defaults
@@ -61,21 +61,22 @@ async def run_scenario(
 
     duration_seconds = time.perf_counter() - started_at
     outcome = capture_outcome(result)
-    failures = evaluate_assertions(scenario.assertions, outcome)
+    assertion_results = evaluate_assertions(scenario.assertions, outcome)
+    all_passed = all(assertion.passed for assertion in assertion_results)
 
-    return ScenarioResult(
+    return TestResult(
         scenario=scenario.name,
         server=scenario.server,
         tool=scenario.tool,
-        status="passed" if not failures else "failed",
+        status="passed" if all_passed else "failed",
         duration_seconds=duration_seconds,
-        failures=failures,
+        assertions=assertion_results,
         response=_serialize_response(result),
     )
 
 
-def _error_result(scenario: TestScenario, *, duration_seconds: float, error: str) -> ScenarioResult:
-    return ScenarioResult(
+def _error_result(scenario: TestScenario, *, duration_seconds: float, error: str) -> TestResult:
+    return TestResult(
         scenario=scenario.name,
         server=scenario.server,
         tool=scenario.tool,

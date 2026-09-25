@@ -51,7 +51,7 @@ async def test_scenario_with_failing_assertion_reports_failure(
 
     assert result.status == "failed"
     assert result.error is None
-    assert any("goodbye" in failure for failure in result.failures)
+    assert any("goodbye" in failure.message for failure in result.failures)
 
 
 # 3. Connection failure ---------------------------------------------------------
