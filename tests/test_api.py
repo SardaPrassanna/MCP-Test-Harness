@@ -109,6 +109,33 @@ def test_registering_malformed_scenario_is_rejected(client: TestClient) -> None:
     assert response.status_code == 422
 
 
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"assertions": {}},
+        {"assertions": {"min_items": -1}},
+        {"assertions": {"min_items": 5, "max_items": 1}},
+        {"unexpected_field": "nope"},
+        {"name": ""},
+        {"tool": ""},
+    ],
+    ids=[
+        "empty_assertions",
+        "negative_min_items",
+        "min_over_max",
+        "extra_field",
+        "blank_name",
+        "blank_tool",
+    ],
+)
+def test_invalid_scenario_shapes_are_rejected_with_422(
+    client: TestClient, overrides: dict[str, Any]
+) -> None:
+    response = client.post("/tests", json=_scenario_payload(**overrides))
+
+    assert response.status_code == 422
+
+
 # --- POST/GET /runs, GET /runs/{run_id} ----------------------------------------------
 
 
@@ -185,3 +212,37 @@ def test_get_unknown_run_returns_404(client: TestClient) -> None:
     response = client.get("/runs/999")
 
     assert response.status_code == 404
+
+
+# --- database isolation between tests --------------------------------------------------
+
+
+def test_fresh_client_sees_no_data_from_other_tests(client: TestClient) -> None:
+    """Several tests in this file register a server/scenario named exactly
+    like the ones in `_server_payload`/`_scenario_payload`; if the `client`
+    fixture's per-test scratch database ever leaked into another test, one
+    of those registrations would show up here as pre-existing data."""
+    assert client.get("/servers").json() == []
+    assert client.get("/tests").json() == []
+    assert client.get("/runs").json() == []
+
+
+def test_two_test_databases_can_reuse_the_same_server_name(tmp_path: Path) -> None:
+    first_client = TestClient(
+        create_app(Settings(database_url=f"sqlite:///{(tmp_path / 'first.db').as_posix()}"))
+    )
+    second_client = TestClient(
+        create_app(Settings(database_url=f"sqlite:///{(tmp_path / 'second.db').as_posix()}"))
+    )
+
+    first_response = first_client.post("/servers", json=_server_payload())
+    second_response = second_client.post("/servers", json=_server_payload())
+
+    assert first_response.status_code == 201
+    assert second_response.status_code == 201
+    assert [server["name"] for server in first_client.get("/servers").json()] == [
+        "fake-stdio-server"
+    ]
+    assert [server["name"] for server in second_client.get("/servers").json()] == [
+        "fake-stdio-server"
+    ]
