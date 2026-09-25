@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -34,6 +34,7 @@ class TestResult(BaseModel):
     """
 
     model_config = ConfigDict(frozen=True)
+    __test__: ClassVar[bool] = False  # not a pytest test class despite the name
 
     scenario: str
     server: str
@@ -54,6 +55,7 @@ class TestRunResult(BaseModel):
     """The aggregated outcome of executing a batch of scenarios."""
 
     model_config = ConfigDict(frozen=True)
+    __test__: ClassVar[bool] = False  # not a pytest test class despite the name
 
     results: list[TestResult]
     passed: int = Field(ge=0)
