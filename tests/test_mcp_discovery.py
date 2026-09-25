@@ -120,7 +120,7 @@ async def test_tool_discovery_over_stdio(stdio_config_factory: StdioConfigFactor
     async with MCPConnection(stdio_config_factory()) as session:
         result = await session.list_tools()
 
-    assert [tool.name for tool in result.tools] == ["echo"]
+    assert [tool.name for tool in result.tools] == ["echo", "list_items", "boom", "slow"]
 
 
 # 7. Resource discovery -------------------------------------------------------------
